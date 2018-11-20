@@ -1,8 +1,7 @@
+const { register } = require('../controllers/user');
 module.exports = (router) => {
-    router.route('/')
-        .get((req, res) => {
-            res.send('Working');
-        });
+    router.route('/register')
+        .post(register);
 
     return router;
 };

@@ -12,7 +12,6 @@ const app = express();
 const router = express.Router();
 
 
-app.use(require('./route/router')(router));
 if(name !== 'production') {
     app.use(cors());
     app.use(morgan('dev'));
@@ -20,7 +19,10 @@ if(name !== 'production') {
 }
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(require('./route/router')(router));
+
 app.use(express.static(path.join(__dirname, './public')));
 
 
