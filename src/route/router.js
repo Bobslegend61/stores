@@ -1,7 +1,10 @@
-const { register } = require('../controllers/user');
+const { register, login } = require('../controllers/user');
 module.exports = (router) => {
-    router.route('/register')
+    router.route('/users')
         .post(register);
+
+    router.route('/login')
+        .post(login);
 
     return router;
 };

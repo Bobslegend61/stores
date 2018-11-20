@@ -1,6 +1,6 @@
 const User = require('../models/Users');
 const logger = require('../logger');
-const { validation, respond, hashPassword } = require('../util/helper');
+const { validation, respond, hashPassword, comparePassword } = require('../util/helper');
 
 module.exports = (() => {
     const register = (req, res) => {
@@ -102,7 +102,65 @@ module.exports = (() => {
 
     };
 
+    const login = (req, res) => {
+        if(!req.body || !req.body.username || !req.body.password) return respond(400, { error: 'Bad Request', message: 'Invalid Fields', statusCode: 400 }, res);
+        
+        const { body: { username, password } } = req;
+
+        const validationErrors = validation([
+            {
+                validate: username,
+                validators: [{
+                    name: 'emptiness',
+                    value: ''
+                }, {
+                    name: 'type',
+                    value: 'string'
+                }]
+            },
+            {
+                validate: password,
+                validators: [{
+                    name: 'emptiness',
+                    value: ''
+                }, {
+                    name: 'type',
+                    value: 'string'
+                }]
+            }
+        ]);
+        
+        if(validationErrors.length > 0) return respond(400, { error: 'Bad Request', message: 'Invalid Fields.', statusCode: 400 }, res);
+
+        User.find({ username }, (err, user) => {
+            if(err) {
+                logger.log({ level: 'error', message: err });
+                return respond(500, { error: 'Internal server error', message: 'Something went wrong', statusCode: 500 }, res);
+            }
+
+            if(!user) return respond(404, { error: 'Not Found', message: 'username/password not correct', statusCode: 404 }, res);
+            
+            comparePassword(password, user.password, (err, isMatch) => {
+                if(err) {
+                    logger.log({ level: 'error', message: err });
+                    return respond(500, { error: 'Internal server error', message: 'Something went wrong', statusCode: 500 }, res);
+                }
+
+                if(!isMatch) return respond(404, { error: 'Not Found', message: 'username/password not correct', statusCode: 404 }, res);
+                
+                const data = {
+                    username: user.username,
+                    firstname: user.firstname,
+                    lastname: user.lastname
+                };
+
+                respond(200, { statusCode: 200, data }, res);
+            });
+        });
+    };
+
     return {
-        register
+        register, 
+        login
     };
 })();
