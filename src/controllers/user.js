@@ -128,7 +128,7 @@ module.exports = (() => {
                     value: 'string'
                 }]
             }
-        ])
+        ]);
         
         if(validationErrors.length > 0) return respond(400, { error: 'Bad Request', message: 'Invalid Fields.', statusCode: 400 }, res);
 
