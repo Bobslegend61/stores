@@ -159,8 +159,103 @@ module.exports = (() => {
         });
     };
 
+    const editUser = (req, res) => {
+        const { params: { id } } = req;
+        const { body } = req;
+
+        if(body.password || body.username) return respond(400, { error: 'Bad Request', message: 'Invalid Fields.', statusCode: 400 }, res);
+
+        const fields = [];
+        for(let field in body) {
+            fields.push({
+                validate: body[field],
+                validators: [
+                    {
+                        name: 'emptiness',
+                        value: ''
+                    },
+                    {
+                        name: 'type',
+                        value: 'string'
+                    }
+                ]
+            });
+        }
+
+        const validationErrors = validation([
+            {
+                validate: id,
+                validators: [
+                    {
+                        name: 'emptiness',
+                        value: ''
+                    },
+                    {
+                        name: 'type',
+                        value: 'string'
+                    }
+                ]
+            },
+            ...fields
+        ]);
+        
+        if(validationErrors.length > 0) return respond(400, { error: 'Bad Request', message: 'Invalid Fields.', statusCode: 400 }, res);
+
+        User.findOneAndUpdate({ _id: id }, body, { new: true }, (err, user) => {
+            if(err) {
+                logger.log({ level: 'error', message: err });
+                return respond(500, { statusCode: 500, error: 'Internal server error', message: 'Something went wrong' }, res);
+            }
+
+            if(!user) {
+                return respond(404, { error: 'Not Found', statusCode: 404, message: 'User not found' }, res);
+            }
+
+            let data = {
+                username: user.username,
+                firstname: user.firstname,
+                lastname: user.lastname
+            };
+
+            respond(200, { statusCode: 200, data }, res);
+        });
+    };
+
+    const deleteUser = (req, res) => {
+        const { params: { id } } = req;
+
+        const validationErrors = validation([
+            {
+                validate: id,
+                validators: [
+                    {
+                        name: 'emptiness',
+                        value: ''
+                    },
+                    {
+                        name: 'type',
+                        value: 'string'
+                    }
+                ]
+            }
+        ]);
+        
+        if(validationErrors.length > 0) return respond(400, { error: 'Bad Request', message: 'Invalid Fields.', statusCode: 400 }, res);
+        
+        User.findByIdAndDelete(id, (err, user) => {
+            if(err || !user) {
+                logger.log({ level: 'error', message: err });
+                return respond(500, { statusCode: 500, error: 'Internal server error', message: 'Something went wrong' }, res);
+            }
+
+            respond(200, { statusCode: 200 }, res);
+        });
+    };
+
     return {
         register, 
-        login
+        login, 
+        editUser,
+        deleteUser
     };
 })();
