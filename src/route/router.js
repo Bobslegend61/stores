@@ -1,4 +1,5 @@
 const { register, login, editUser, deleteUser } = require('../controllers/user');
+const { getAllProducts, postAProduct, editAProduct, deleteAProduct } = require('../controllers/products');
 module.exports = (router) => {
     router.route('/users')
         .post(register);
@@ -9,6 +10,14 @@ module.exports = (router) => {
 
     router.route('/login')
         .post(login);
+
+    router.route('/products')
+        .get(getAllProducts)
+        .post(postAProduct);
+
+    router.route('/products/:id')
+        .put(editAProduct)
+        .delete(deleteAProduct);
 
     return router;
 };
