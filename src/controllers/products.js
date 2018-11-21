@@ -39,7 +39,7 @@ module.exports = (() => {
                         name: 'type',
                         value: 'string'
                     }
-                ]
+                ];
             }
 
             fields.push({
@@ -63,8 +63,70 @@ module.exports = (() => {
         });
     };
 
+    const editAProduct = (req, res) => {
+        const { params: id } = req;
+        const { body } = req;
+
+        let fields = [];
+        for(let field in body) {
+            let validators = [];
+            if(field == 'inStock') {
+                validators = [{
+                    name: 'type',
+                    value: 'number'
+                }];
+            }else {
+                validators = [
+                    {
+                        name: 'emptiness',
+                        value: ''
+                    },
+                    {
+                        name: 'type',
+                        value: 'string'
+                    }
+                ];
+            }
+
+            fields.push({
+                validate: body[field],
+                validators
+            });
+        }
+
+        const validationErrors = validation([...fields, { 
+            validate: id,
+            validators: [
+                {
+                    name: 'emptiness',
+                    value: ''
+                },
+                {
+                    name: 'type',
+                    value: 'string'
+                }
+            ]
+        }]);
+    
+        if(validationErrors.length > 0) return respond(400, { error: 'Bad Request', message: 'Invalid Fields.', statusCode: 400 }, res);
+        
+        Products.findByIdAndUpdate(id, body, { new: true }, (err, product) => {
+            if(err) {
+                logger.log({ level: 'error', message: err });
+                return respond(500, { statusCode: 500, error: 'Internal server error', message: 'Something went wrong' }, res);
+            }
+
+            if(!product) {
+                return respond(404, { error: 'Not Found', statusCode: 404, message: 'User not found' }, res);
+            }
+
+            respond(200, { statusCode: 200, data: product }, res);
+        });
+    };
+
     return {
         getAllProducts, 
-        postAProduct
+        postAProduct,
+        editAProduct
     };
 })();
