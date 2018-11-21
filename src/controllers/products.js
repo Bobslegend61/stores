@@ -124,9 +124,41 @@ module.exports = (() => {
         });
     };
 
+    const deleteAProduct = (req, res) => {
+        const { params: { id } } = req;
+
+        const validationErrors = validation([
+            {
+                validate: id,
+                validators: [
+                    {
+                        name: 'emptiness',
+                        value: ''
+                    },
+                    {
+                        name: 'type',
+                        value: 'string'
+                    }
+                ]
+            }
+        ]);
+        
+        if(validationErrors.length > 0) return respond(400, { error: 'Bad Request', message: 'Invalid Fields.', statusCode: 400 }, res);
+        
+        Products.findByIdAndDelete(id, (err, product) => {
+            if(err || !product) {
+                logger.log({ level: 'error', message: err });
+                return respond(500, { statusCode: 500, error: 'Internal server error', message: 'Something went wrong' }, res);
+            }
+
+            respond(200, { statusCode: 200 }, res);
+        });
+    };
+
     return {
         getAllProducts, 
         postAProduct,
-        editAProduct
+        editAProduct,
+        deleteAProduct
     };
 })();
